@@ -1,0 +1,163 @@
+// Health AI System Database Schema
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/health_ai_ux_transformation/app/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// User model for health data management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Health data relationships
+  healthAssessments HealthAssessment[]
+  biomarkers        Biomarker[]
+  consultations     Consultation[]
+  achievements      Achievement[]
+  
+  @@map("users")
+}
+
+// Health Assessment model for comprehensive analysis
+model HealthAssessment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Assessment metadata
+  assessmentType String // "bioenergetic", "metabolic", "comprehensive"
+  status         String @default("active") // "active", "archived", "draft"
+  
+  // Core health metrics
+  overallScore    Float
+  energyLevel     Float
+  metabolicHealth Float
+  stressLevel     Float
+  
+  // Bioenergetic analysis (Ray Peat principles)
+  thyroidFunction    Float
+  mitochondrialHealth Float
+  hormonalBalance    Float
+  inflammationLevel  Float
+  
+  // Analysis results
+  keyFindings      Json // Critical findings for Layer 1
+  detailedInsights Json // Contextual explanations for Layer 2
+  comprehensiveData Json // Full technical details for Layer 3
+  
+  // Recommendations
+  immediateActions Json // Urgent recommendations
+  recommendations  Json // Detailed recommendations
+  
+  // Engagement tracking
+  viewCount       Int @default(0)
+  timeSpent       Int @default(0) // seconds
+  layerProgress   Json // tracks which layers user explored
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("health_assessments")
+}
+
+// Biomarker model for detailed health metrics
+model Biomarker {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Biomarker details
+  name        String
+  value       Float
+  unit        String
+  category    String // "metabolic", "hormonal", "inflammatory", "nutritional"
+  
+  // Reference ranges
+  optimalMin  Float?
+  optimalMax  Float?
+  normalMin   Float?
+  normalMax   Float?
+  
+  // Analysis
+  status      String // "optimal", "suboptimal", "concerning", "critical"
+  trend       String? // "improving", "stable", "declining"
+  
+  // Ray Peat context
+  rayPeatContext String?
+  significance   String?
+  
+  // Metadata
+  testDate    DateTime
+  labProvider String?
+  notes       String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("biomarkers")
+}
+
+// Consultation model for booking integration
+model Consultation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Consultation details
+  type          String // "initial", "follow-up", "emergency"
+  status        String @default("requested") // "requested", "scheduled", "completed", "cancelled"
+  
+  // Scheduling
+  requestedDate DateTime?
+  scheduledDate DateTime?
+  duration      Int @default(60) // minutes
+  
+  // Context
+  concerns      String?
+  priority      String @default("normal") // "low", "normal", "high", "urgent"
+  
+  // Results
+  notes         String?
+  recommendations String?
+  followUpDate  DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("consultations")
+}
+
+// Achievement model for gamification
+model Achievement {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Achievement details
+  type        String // "exploration", "improvement", "consistency", "milestone"
+  title       String
+  description String
+  
+  // Progress
+  earned      Boolean @default(false)
+  progress    Float   @default(0.0) // 0.0 to 1.0
+  
+  // Metadata
+  category    String // "engagement", "health", "learning"
+  points      Int @default(0)
+  
+  earnedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("achievements")
+}
